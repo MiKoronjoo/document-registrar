@@ -25,18 +25,46 @@ contract Registrar {
     constructor() {
     }
 
-    function register(bytes32 hash_, address author, string memory title) public {
-        require(documents[hash_].timestamp == 0, "Registrar.register :: This hash is already registered");
+    function getSigner(
+        bytes32 hash_,
+        string memory title,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public pure returns (address) {
+        bytes32 message = keccak256(abi.encodePacked(hash_, title));
+        address signer = ecrecover(message, v, r, s);
+        return signer;
+    }
+
+    function register(
+        bytes32 hash_,
+        string memory title,
+        address author,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
+        require(documents[hash_].timestamp == 0, "Registrar.register :: hash is already registered");
+        require(getSigner(hash_, title, v, r, s) == author, "Registrar.register :: author is not signer");
         documents[hash_] = Document(title, author, block.timestamp);
         emit documentRegistered(hash_, title, author);
     }
 
-    function selfRegister(bytes32 hash_, string memory title) external {
-        register(hash_, msg.sender, title);
+    function registerWithoutSign(
+        bytes32 hash_,
+        string memory title
+    ) external {
+        require(documents[hash_].timestamp == 0, "Registrar.register :: hash is already registered");
+        documents[hash_] = Document(title, msg.sender, block.timestamp);
+        emit documentRegistered(hash_, title, msg.sender);
     }
 
-    function updateTitle(bytes32 hash_, string memory newTitle) external {
-        require(documents[hash_].timestamp != 0, "Registrar.register :: The hash is not found");
+    function updateTitle(
+        bytes32 hash_,
+        string memory newTitle
+    ) external {
+        require(documents[hash_].timestamp != 0, "Registrar.register :: hash is not found");
         documents[hash_].title = newTitle;
         emit titleChanged(hash_, newTitle);
     }
