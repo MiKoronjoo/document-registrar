@@ -25,6 +25,12 @@ contract Registrar {
     constructor() {
     }
 
+    function getTimestamp(
+        bytes32 hash_
+        ) external pure returns (uint256) {
+            return documents[hash_].timestamp;
+        }
+
     function getSigner(
         bytes32 hash_,
         string memory title,
