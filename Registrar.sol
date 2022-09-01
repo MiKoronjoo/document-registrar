@@ -61,7 +61,7 @@ contract Registrar {
         bytes32 hash_,
         string memory title
     ) external {
-        require(documents[hash_].timestamp == 0, "Registrar.register :: hash is already registered");
+        require(documents[hash_].timestamp == 0, "Registrar.registerWithoutSign :: hash is already registered");
         documents[hash_] = Document(title, msg.sender, block.timestamp);
         emit documentRegistered(hash_, title, msg.sender);
     }
@@ -70,7 +70,8 @@ contract Registrar {
         bytes32 hash_,
         string memory newTitle
     ) external {
-        require(documents[hash_].timestamp != 0, "Registrar.register :: hash is not found");
+        require(documents[hash_].timestamp != 0, "Registrar.updateTitle :: hash is not found");
+        require(documents[hash_].author == msg.sender, "Registrar.updateTitle :: sender is not author");
         documents[hash_].title = newTitle;
         emit titleChanged(hash_, newTitle);
     }
