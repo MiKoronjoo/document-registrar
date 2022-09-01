@@ -27,7 +27,7 @@ contract Registrar {
 
     function getTimestamp(
         bytes32 hash_
-        ) external pure returns (uint256) {
+        ) external view returns (uint256) {
             return documents[hash_].timestamp;
         }
 
