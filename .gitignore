@@ -130,3 +130,7 @@ dmypy.json
 
 # IDE files
 .idea/
+
+# config file
+ui/config.py
+server/config.py

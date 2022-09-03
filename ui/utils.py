@@ -6,15 +6,14 @@ from eth_account.messages import encode_defunct
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 
-with open('registrar_abi.json') as fp:
-    ABI = json.load(fp)
+from abi import REGISTRAR_ABI
 
 
 class Registrar:
-    def __init__(self, address: str):
-        self.w3 = Web3(Web3.HTTPProvider('https://polygon-rpc.com'))
+    def __init__(self, address: str, rpc_url: str):
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
         self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        self.contract = self.w3.eth.contract(Web3.toChecksumAddress(address), abi=ABI)
+        self.contract = self.w3.eth.contract(Web3.toChecksumAddress(address), abi=REGISTRAR_ABI)
 
     def file_timestamp(self, file_hash: str) -> int:
         return self.contract.functions.getTimestamp(file_hash).call()

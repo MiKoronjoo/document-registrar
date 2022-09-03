@@ -1,10 +1,10 @@
 from flask import Flask, jsonify, request
 
-from config import PRIVATE_KEY, CONTRACT_ADDRESS
-from utils import Registrar
+from config import PRIVATE_KEY, CONTRACT_ADDRESS, RPC_URL
+from server_utils import Registrar
 
 app = Flask(__name__)
-contract = Registrar(CONTRACT_ADDRESS)
+contract = Registrar(CONTRACT_ADDRESS, RPC_URL)
 
 
 class MissRequiredParam(Exception):
@@ -46,3 +46,6 @@ def register_hash():
 @app.route('/getOK', methods=['GET'])
 def get_ok():
     return 'ok'
+
+
+app.run()
