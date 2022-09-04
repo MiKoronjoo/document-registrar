@@ -134,3 +134,4 @@ dmypy.json
 # config file
 ui/config.py
 server/config.py
+*.sqlite

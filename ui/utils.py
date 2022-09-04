@@ -1,7 +1,8 @@
+import base64
 import hashlib
-import json
 
 import eth_account
+from cryptography.fernet import Fernet
 from eth_account.messages import encode_defunct
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
@@ -85,3 +86,20 @@ def sign_message(types: list, params: list, private_key: str) -> dict:
         r=Web3.toHex(res.r),
         s=Web3.toHex(res.s),
     )
+
+
+def encrypt_message(message, password):
+    key = base64.urlsafe_b64encode(password.ljust(32, ' ').encode())
+    encoded_message = message.encode()
+    f = Fernet(key)
+    encrypted_message = f.encrypt(encoded_message)
+    return encrypted_message.decode()
+
+
+def decrypt_message(encrypted_message, password):
+    key = base64.urlsafe_b64encode(password.ljust(32, ' ').encode())
+    f = Fernet(key)
+    decrypted_message = f.decrypt(encrypted_message.encode())
+    return decrypted_message.decode()
+
+
