@@ -1,0 +1,6 @@
+Flask==2.0.2
+cryptography==37.0.4
+ecdsa==0.18.0
+base58==2.1.1
+web3==5.27.0
+PySide2==5.15.2.1
