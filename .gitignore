@@ -132,6 +132,6 @@ dmypy.json
 .idea/
 
 # config file
-ui/config.py
+wallet_interface/config.py
 server/config.py
 *.sqlite
