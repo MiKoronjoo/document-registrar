@@ -42,19 +42,25 @@ class UiCreateAccountWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         from . import UiWalletWindow
-        self.createBT.clicked.connect(lambda: UiWalletWindow().setupUi(MainWindow))
+        self.createBT.clicked.connect(lambda: self._create(MainWindow))
         self.cancelBT.clicked.connect(lambda: UiWalletWindow().setupUi(MainWindow))
 
         self.retranslateUi(MainWindow)
         QMetaObject.connectSlotsByName(MainWindow)
 
-    # setupUi
+    def _create(self, win):
+        name = self.accountNameEdit.text().strip()
+        if not name:
+            ac = len(win.wallet.accounts) + 1
+            name = f'Account {ac}'
+        win.wallet.create_account(name)
+        from . import UiWalletWindow
+        UiWalletWindow().setupUi(win)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Create Account", None))
-        self.accountNameEdit.setText(QCoreApplication.translate("MainWindow", u"Main", None))
+        # self.accountNameEdit.setText(QCoreApplication.translate("MainWindow", u"Main", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Account Name", None))
         self.cancelBT.setText(QCoreApplication.translate("MainWindow", u"cancel", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Create Account", None))
         self.createBT.setText(QCoreApplication.translate("MainWindow", u"Create", None))
-    # retranslateUi

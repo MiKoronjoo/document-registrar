@@ -50,13 +50,23 @@ class UiImportAccountWindow(object):
         ImportAccountWindow.setStatusBar(self.statusbar)
 
         from . import UiWalletWindow
-        self.importBT.clicked.connect(lambda: UiWalletWindow().setupUi(ImportAccountWindow))
+        self.importBT.clicked.connect(lambda: self._import(ImportAccountWindow))
         self.cancelBT.clicked.connect(lambda: UiWalletWindow().setupUi(ImportAccountWindow))
 
         self.retranslateUi(ImportAccountWindow)
         QMetaObject.connectSlotsByName(ImportAccountWindow)
 
-    # setupUi
+    def _import(self, win):
+        pk = self.privateKeyEdit.text()
+        if pk.lower().startswith('0x'):
+            pk = pk[2:]
+        name = self.accountNameEdit.text().lower()
+        if not name:
+            ac = len(win.wallet.accounts) + 1
+            name = f'Account {ac}'
+        win.wallet.import_account(pk, name)
+        from . import UiWalletWindow
+        UiWalletWindow().setupUi(win)
 
     def retranslateUi(self, ImportAccountWindow):
         ImportAccountWindow.setWindowTitle(QCoreApplication.translate("ImportAccountWindow", u"Import Account", None))
@@ -64,7 +74,6 @@ class UiImportAccountWindow(object):
         self.cancelBT.setText(QCoreApplication.translate("ImportAccountWindow", u"cancel", None))
         self.label.setText(
             QCoreApplication.translate("ImportAccountWindow", u"Enter your private key string here:", None))
-        self.accountNameEdit.setText(QCoreApplication.translate("ImportAccountWindow", u"Main", None))
+        # self.accountNameEdit.setText(QCoreApplication.translate("ImportAccountWindow", u"Main", None))
         self.label_3.setText(QCoreApplication.translate("ImportAccountWindow", u"Account Name", None))
         self.importBT.setText(QCoreApplication.translate("ImportAccountWindow", u"Import", None))
-    # retranslateUi

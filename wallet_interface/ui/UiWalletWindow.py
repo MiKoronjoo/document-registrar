@@ -44,9 +44,6 @@ class UiWalletWindow(object):
         self.copyBT.setObjectName(u"copyBT")
         self.copyBT.setGeometry(QRect(478, 86, 41, 36))
         self.comboBox = QComboBox(self.centralwidget)
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
         self.comboBox.setObjectName(u"comboBox")
         self.comboBox.setGeometry(QRect(610, 46, 171, 37))
         self.importBT = QPushButton(self.centralwidget)
@@ -69,32 +66,56 @@ class UiWalletWindow(object):
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        from . import UiLoginWindow, UiImportAccountWindow, UiCreateAccountWindow
-        self.lockBT.clicked.connect(lambda: UiLoginWindow().setupUi(MainWindow))
-        self.copyBT.clicked.connect(lambda: 1)
+        from . import UiImportAccountWindow, UiCreateAccountWindow
+        self.lockBT.clicked.connect(lambda: self._lock(MainWindow))
+        self.copyBT.clicked.connect(lambda: self._copy(MainWindow))
         self.importBT.clicked.connect(lambda: UiImportAccountWindow().setupUi(MainWindow))
         self.createBT.clicked.connect(lambda: UiCreateAccountWindow().setupUi(MainWindow))
-        self.comboBox.currentIndexChanged.connect(lambda: self.accountNameLabel.setText(self.comboBox.currentText()))
 
         self.retranslateUi(MainWindow)
-
         QMetaObject.connectSlotsByName(MainWindow)
+        self.comboBox.currentIndexChanged.connect(lambda: self._select_account(MainWindow))
 
-    # setupUi
+    def _select_account(self, win):
+        index = self.comboBox.currentIndex()
+        win.wallet.selected_index = index
+        account = win.wallet.selected
+        self.accountNameLabel.setText(account.name)
+        self.addressLabel.setText(self.str_addr(account.address))
+        self.balanceLabel.setText("1 ETH")
+
+    def _lock(self, win):
+        from . import UiLoginWindow
+        win.wallet.lock()
+        UiLoginWindow().setupUi(win)
+
+    def _copy(self, win):
+        cb = QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+
+        cb.setText(win.wallet.selected.address, mode=cb.Clipboard)
+
+    def str_addr(self, address: str):
+        return address[:5] + '...' + address[-4:]
 
     def retranslateUi(self, MainWindow):
+        account = MainWindow.wallet.selected
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Document Registrar", None))
-        self.accountNameLabel.setText(QCoreApplication.translate("MainWindow", u"Account Name 1", None))
-        self.addressLabel.setText(QCoreApplication.translate("MainWindow", u"0x77c1...a77F", None))
+        self.accountNameLabel.setText(QCoreApplication.translate("MainWindow", account.name, None))
+        self.addressLabel.setText(QCoreApplication.translate("MainWindow", self.str_addr(account.address), None))
         self.balanceLabel.setText(QCoreApplication.translate("MainWindow", u"73.0132 ETH", None))
         self.copyBT.setText(QCoreApplication.translate("MainWindow", u"copy", None))
-        self.comboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"Account Name 1", None))
-        self.comboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Account Name 2", None))
-        self.comboBox.setItemText(2, QCoreApplication.translate("MainWindow", u"Account Name 3", None))
+        for i, acc in enumerate(MainWindow.wallet.accounts):
+            self.comboBox.addItem("")
+            label = acc.name
+            if acc.is_imported:
+                label += ' | imported'
+            self.comboBox.setItemText(i, QCoreApplication.translate("MainWindow", label, None))
+
+        self.comboBox.setCurrentIndex(MainWindow.wallet.selected_index)
 
         self.importBT.setText(QCoreApplication.translate("MainWindow", u"Import Account", None))
         self.createBT.setText(QCoreApplication.translate("MainWindow", u"Create Account", None))
         self.lockBT.setText(QCoreApplication.translate("MainWindow", u"Lock", None))
         self.showRegistersBT.setText(QCoreApplication.translate("MainWindow", u"register a file", None))
         self.pushButton_6.setText(QCoreApplication.translate("MainWindow", u"show registers", None))
-    # retranslateUi

@@ -1,4 +1,4 @@
-create table Account
+create table if not exists Account
 (
     id              integer not null
         constraint Account_pk
@@ -8,10 +8,10 @@ create table Account
     imported        boolean  default false not null
 );
 
-create unique index Account_id_uindex
+create unique index if not exists Account_id_uindex
     on Account (id);
 
-create table Wallet
+create table if not exists Wallet
 (
     enc_seed_phrase varchar not null,
     count           integer default 0 not null,

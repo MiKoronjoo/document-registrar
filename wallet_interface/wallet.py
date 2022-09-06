@@ -5,19 +5,29 @@ import pathlib
 import random
 import re
 import sqlite3
+import sys
 
 import eth_account
 from mnemonic_utils import mnemonic_to_private_key
 from utils import decrypt_message, encrypt_message
+from config import DB_PATH
 
 
 def exe_query(query: str, params: tuple = ()):
-    con_obj = sqlite3.connect('data.sqlite')
+    con_obj = sqlite3.connect(DB_PATH)
     courser = con_obj.execute(query, params)
     res = courser.fetchall()
     con_obj.commit()
     con_obj.close()
     return res
+
+
+def create_database_if_not_exists():
+    with open('schema.sql') as fp:
+        queries = fp.read().split(';')
+    for q in queries:
+        if q:
+            exe_query(q)
 
 
 class Account:
@@ -42,10 +52,23 @@ class Wallet:
         self.is_lock = True
         self.accounts = []
         self.password = ''
-        self.selected_account = 0
+        self.selected_index = 0
+
+    def check_database(self) -> bool:
+        return bool(exe_query('SELECT * FROM Wallet LIMIT 1'))
+
+    @property
+    def selected(self) -> Account:
+        return self.accounts[self.selected_index]
+
+    def set_password(self, password: str):
+        assert 8 <= len(password) <= 32, 'Password length must between 8 and 32 chars'
+        self.password_hash = hashlib.sha224(password.encode()).hexdigest()
+        self.password = password
 
     def _load_accounts(self, password: str):
         found = exe_query('SELECT * FROM Account')
+        self.accounts.clear()
         for acc in found:
             _, name, enc_private_key, imported = acc
             private_key = decrypt_message(enc_private_key, password)
@@ -77,6 +100,7 @@ class Wallet:
         exe_query('INSERT INTO Account (name, enc_private_key, imported) VALUES (?, ?, ?)',
                   (name, enc_private_key, False))
         exe_query('UPDATE Wallet SET count = count + 1')
+        self.selected_index = len(self.accounts)
         self.accounts.append(Account(private_key, name, False))
 
     def import_account(self, private_key: str, name: str):
@@ -86,6 +110,8 @@ class Wallet:
         enc_private_key = encrypt_message(private_key, self.password)
         exe_query('INSERT INTO Account (name, enc_private_key, imported) VALUES (?, ?, ?)',
                   (name, enc_private_key, True))
+        self.selected_index = len(self.accounts)
+        self.accounts.append(Account(private_key, name, True))
 
     def create_wallet(self, length: int):
         assert self.password, 'Password not set yet'
@@ -96,6 +122,7 @@ class Wallet:
                   (enc_seed_phrase, hashlib.sha224(self.password.encode()).hexdigest()))
         self.is_lock = False
         self.create_account('Main Account')
+        self.seed_phrase = enc_seed_phrase
         self.unlock(self.password)
         return seed_phrase
 
@@ -107,12 +134,9 @@ class Wallet:
                   (enc_seed_phrase, hashlib.sha224(self.password.encode()).hexdigest()))
         self.is_lock = False
         self.create_account('Main Account')
+        self.seed_phrase = enc_seed_phrase
         self.unlock(self.password)
         return seed_phrase
-
-    def create_password(self, password):
-        assert 8 <= len(password) <= 32, 'Password length must between 8 and 32 chars'
-        self.password = password
 
 
 def generate_seed_phrase(entropy: str) -> str:

@@ -21,10 +21,10 @@ class UiLoginWindow(object):
         self.label_2.setFont(font)
         self.label_2.setTextFormat(Qt.AutoText)
         self.label_2.setAlignment(Qt.AlignCenter)
-        self.kpasswordlineedit = QLineEdit(self.centralwidget)
-        self.kpasswordlineedit.setObjectName(u"kpasswordlineedit")
-        self.kpasswordlineedit.setEchoMode(QLineEdit.Password)
-        self.kpasswordlineedit.setGeometry(QRect(310, 240, 201, 36))
+        self.passEdit = QLineEdit(self.centralwidget)
+        self.passEdit.setObjectName(u"passEdit")
+        self.passEdit.setEchoMode(QLineEdit.Password)
+        self.passEdit.setGeometry(QRect(310, 240, 201, 36))
         self.label = QLabel(self.centralwidget)
         self.label.setObjectName(u"label")
         self.label.setGeometry(QRect(310, 210, 91, 19))
@@ -35,18 +35,33 @@ class UiLoginWindow(object):
         self.statusbar = QStatusBar(loginWindow)
         self.statusbar.setObjectName(u"statusbar")
         loginWindow.setStatusBar(self.statusbar)
+        self.error_label = QLabel(self.centralwidget)
+        self.error_label.setObjectName("error_label")
+        self.error_label.setGeometry(QRect(310, 340, 201, 36))
+        font1 = QFont()
+        font1.setBold(False)
+        font1.setWeight(50)
+        self.error_label.setFont(font1)
 
-        from . import UiWalletWindow
-        self.pushButton.clicked.connect(lambda: UiWalletWindow().setupUi(loginWindow))
+        self.pushButton.clicked.connect(lambda: self._unlock(loginWindow))
         self.retranslateUi(loginWindow)
 
         QMetaObject.connectSlotsByName(loginWindow)
 
-    # setupUi
+    def _unlock(self, win):
+        try:
+            win.wallet.unlock(self.passEdit.text())
+        except AssertionError:
+            msg = 'Incorrect password'
+            self.error_label.setText(QCoreApplication.translate("loginWindow",
+                                                                f"<html><head/><body><p><span style=\" color:#ff0000;\">{msg}</span></p></body></html>",
+                                                                None))
+        else:
+            from . import UiWalletWindow
+            UiWalletWindow().setupUi(win)
 
     def retranslateUi(self, loginWindow):
         loginWindow.setWindowTitle(QCoreApplication.translate("loginWindow", u"Document Registrar", None))
         self.label_2.setText(QCoreApplication.translate("loginWindow", u"Welcome Back!", None))
         self.label.setText(QCoreApplication.translate("loginWindow", u"Password", None))
         self.pushButton.setText(QCoreApplication.translate("loginWindow", u"Unlock", None))
-    # retranslateUi

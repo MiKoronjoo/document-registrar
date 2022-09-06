@@ -42,10 +42,10 @@ class UiCreatePasswordWindow(object):
         font1.setBold(False)
         font1.setWeight(50)
         self.errorMsgLabel.setFont(font1)
-        self.kpasswordlineedit = QLineEdit(self.centralwidget)
-        self.kpasswordlineedit.setObjectName(u"kpasswordlineedit")
-        self.kpasswordlineedit.setEchoMode(QLineEdit.Password)
-        self.kpasswordlineedit.setGeometry(QRect(270, 220, 291, 36))
+        self.passEdit = QLineEdit(self.centralwidget)
+        self.passEdit.setObjectName(u"passEdit")
+        self.passEdit.setEchoMode(QLineEdit.Password)
+        self.passEdit.setGeometry(QRect(270, 220, 291, 36))
         self.pass2Edit = QLineEdit(self.centralwidget)
         self.pass2Edit.setEchoMode(QLineEdit.Password)
         self.pass2Edit.setObjectName(u"pass2Edit")
@@ -57,12 +57,30 @@ class UiCreatePasswordWindow(object):
 
         self.retranslateUi(createPasswordWindow)
 
-        from . import UiMainWindow, UiCreateWalletWindow
+        from . import UiMainWindow
         self.backBT.clicked.connect(lambda: UiMainWindow().setupUi(createPasswordWindow))
-        self.importBT.clicked.connect(lambda: UiCreateWalletWindow().setupUi(createPasswordWindow))
+        self.importBT.clicked.connect(lambda: self.create_wallet(createPasswordWindow))
         QMetaObject.connectSlotsByName(createPasswordWindow)
 
-    # setupUi
+    def check_password(self):
+        msg = ''
+        if self.passEdit.text() != self.pass2Edit.text():
+            msg = 'passwords does not match'
+        elif len(self.passEdit.text()) < 8 or len(self.passEdit.text()) > 32:
+            msg = 'password length should between 8-32 characters'
+        else:
+            return True
+        self.errorMsgLabel.setText(QCoreApplication.translate("ImportWalletWindow",
+                                                              f"<html><head/><body><p><span style=\" color:#ff0000;\">{msg}</span></p></body></html>",
+                                                              None))
+        return False
+
+    def create_wallet(self, win):
+        if self.check_password():
+            win.wallet.set_password(self.passEdit.text())
+            win.wallet.create_wallet(12)
+            from . import UiCreateWalletWindow
+            UiCreateWalletWindow().setupUi(win)
 
     def retranslateUi(self, createPasswordWindow):
         createPasswordWindow.setWindowTitle(
@@ -72,7 +90,3 @@ class UiCreatePasswordWindow(object):
         self.label_2.setText(QCoreApplication.translate("createPasswordWindow", u"Create Password", None))
         self.importBT.setText(QCoreApplication.translate("createPasswordWindow", u"Create", None))
         self.label.setText(QCoreApplication.translate("createPasswordWindow", u"New Password (8 Characters min)", None))
-        self.errorMsgLabel.setText(QCoreApplication.translate("createPasswordWindow",
-                                                              u"<html><head/><body><p><span style=\" color:#ff0000;\">error message</span></p></body></html>",
-                                                              None))
-    # retranslateUi
