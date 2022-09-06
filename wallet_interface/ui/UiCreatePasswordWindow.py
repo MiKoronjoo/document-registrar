@@ -5,7 +5,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
-class Ui_createPasswordWindow(object):
+class UiCreatePasswordWindow(object):
     def setupUi(self, createPasswordWindow):
         if not createPasswordWindow.objectName():
             createPasswordWindow.setObjectName(u"createPasswordWindow")
@@ -57,6 +57,9 @@ class Ui_createPasswordWindow(object):
 
         self.retranslateUi(createPasswordWindow)
 
+        from . import UiMainWindow, UiCreateWalletWindow
+        self.backBT.clicked.connect(lambda: UiMainWindow().setupUi(createPasswordWindow))
+        self.importBT.clicked.connect(lambda: UiCreateWalletWindow().setupUi(createPasswordWindow))
         QMetaObject.connectSlotsByName(createPasswordWindow)
 
     # setupUi
@@ -73,11 +76,3 @@ class Ui_createPasswordWindow(object):
                                                               u"<html><head/><body><p><span style=\" color:#ff0000;\">error message</span></p></body></html>",
                                                               None))
     # retranslateUi
-
-
-app = QApplication(sys.argv)
-LoginWindow = QMainWindow()
-ui = Ui_createPasswordWindow()
-ui.setupUi(LoginWindow)
-LoginWindow.show()
-sys.exit(app.exec_())

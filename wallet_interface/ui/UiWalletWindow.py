@@ -3,7 +3,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
-class Ui_MainWindow(object):
+class UiWalletWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
@@ -69,8 +69,14 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+        from . import UiLoginWindow, UiImportAccountWindow, UiCreateAccountWindow
+        self.lockBT.clicked.connect(lambda: UiLoginWindow().setupUi(MainWindow))
+        self.copyBT.clicked.connect(lambda: 1)
+        self.importBT.clicked.connect(lambda: UiImportAccountWindow().setupUi(MainWindow))
+        self.createBT.clicked.connect(lambda: UiCreateAccountWindow().setupUi(MainWindow))
+        self.comboBox.currentIndexChanged.connect(lambda: self.accountNameLabel.setText(self.comboBox.currentText()))
+
         self.retranslateUi(MainWindow)
-        self.comboBox.currentIndexChanged.connect(MainWindow.show)
 
         QMetaObject.connectSlotsByName(MainWindow)
 

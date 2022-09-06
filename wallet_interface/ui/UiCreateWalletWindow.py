@@ -3,7 +3,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
-class Ui_CreateWalletWindow(object):
+class UiCreateWalletWindow(object):
     def setupUi(self, CreateWalletWindow):
         if not CreateWalletWindow.objectName():
             CreateWalletWindow.setObjectName(u"CreateWalletWindow")
@@ -47,7 +47,9 @@ class Ui_CreateWalletWindow(object):
         CreateWalletWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(CreateWalletWindow)
-
+        from . import UiCreatePasswordWindow, UiWalletWindow
+        self.backBT.clicked.connect(lambda: UiCreatePasswordWindow().setupUi(CreateWalletWindow))
+        self.okBT.clicked.connect(lambda: UiWalletWindow().setupUi(CreateWalletWindow))
         QMetaObject.connectSlotsByName(CreateWalletWindow)
 
     # setupUi
