@@ -5,4 +5,5 @@ from .UiImportAccountWindow import UiImportAccountWindow
 from .UiImportWalletWindow import UiImportWalletWindow
 from .UiLoginWindow import UiLoginWindow
 from .UiMainWindow import UiMainWindow
+from .UiRegistrarWindow import UiRegistrarWindow
 from .UiWalletWindow import UiWalletWindow

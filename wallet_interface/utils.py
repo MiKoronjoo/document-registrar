@@ -1,5 +1,6 @@
 import base64
 import hashlib
+from typing import Tuple
 
 import eth_account
 from cryptography.fernet import Fernet
@@ -16,8 +17,14 @@ class Registrar:
         self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
         self.contract = self.w3.eth.contract(Web3.toChecksumAddress(address), abi=REGISTRAR_ABI)
 
+    def get_balance(self, address: str) -> float:
+        return round(self.w3.eth.get_balance(address) / 1e18, 8)
+
     def file_timestamp(self, file_hash: str) -> int:
         return self.contract.functions.getTimestamp(file_hash).call()
+
+    def get_info(self, file_hash: str) -> Tuple[str, str, int]:
+        return self.contract.functions.documents(file_hash).call()
 
     def register(self, file_hash: str, title: str, author: str, sign: dict, private_key: str) -> str:
         sender_address = self.w3.eth.account.privateKeyToAccount(private_key).address
@@ -47,7 +54,7 @@ class Registrar:
 
         signed_tx = self.w3.eth.account.sign_transaction(built_tx, private_key)
         self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
+        # self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
         return self.w3.toHex(signed_tx.hash)
 
     def update_title(self, file_hash: str, new_title: str, private_key: str) -> str:
@@ -60,7 +67,7 @@ class Registrar:
 
         signed_tx = self.w3.eth.account.sign_transaction(built_tx, private_key)
         self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
+        # self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
         return self.w3.toHex(signed_tx.hash)
 
 
@@ -101,5 +108,3 @@ def decrypt_message(encrypted_message, password):
     f = Fernet(key)
     decrypted_message = f.decrypt(encrypted_message.encode())
     return decrypted_message.decode()
-
-

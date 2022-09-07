@@ -55,22 +55,23 @@ class UiWalletWindow(object):
         self.lockBT = QPushButton(self.centralwidget)
         self.lockBT.setObjectName(u"lockBT")
         self.lockBT.setGeometry(QRect(10, 47, 103, 36))
+        self.registerBT = QPushButton(self.centralwidget)
+        self.registerBT.setObjectName(u"registerBT")
+        self.registerBT.setGeometry(QRect(340, 300, 121, 36))
         self.showRegistersBT = QPushButton(self.centralwidget)
         self.showRegistersBT.setObjectName(u"showRegistersBT")
-        self.showRegistersBT.setGeometry(QRect(340, 300, 121, 36))
-        self.pushButton_6 = QPushButton(self.centralwidget)
-        self.pushButton_6.setObjectName(u"pushButton_6")
-        self.pushButton_6.setGeometry(QRect(340, 350, 121, 36))
+        self.showRegistersBT.setGeometry(QRect(340, 350, 121, 36))
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        from . import UiImportAccountWindow, UiCreateAccountWindow
+        from . import UiImportAccountWindow, UiCreateAccountWindow, UiRegistrarWindow
         self.lockBT.clicked.connect(lambda: self._lock(MainWindow))
         self.copyBT.clicked.connect(lambda: self._copy(MainWindow))
         self.importBT.clicked.connect(lambda: UiImportAccountWindow().setupUi(MainWindow))
         self.createBT.clicked.connect(lambda: UiCreateAccountWindow().setupUi(MainWindow))
+        self.registerBT.clicked.connect(lambda: UiRegistrarWindow().setupUi(MainWindow))
 
         self.retranslateUi(MainWindow)
         QMetaObject.connectSlotsByName(MainWindow)
@@ -82,7 +83,7 @@ class UiWalletWindow(object):
         account = win.wallet.selected
         self.accountNameLabel.setText(account.name)
         self.addressLabel.setText(self.str_addr(account.address))
-        self.balanceLabel.setText("1 ETH")
+        self.set_balance(win)
 
     def _lock(self, win):
         from . import UiLoginWindow
@@ -92,18 +93,21 @@ class UiWalletWindow(object):
     def _copy(self, win):
         cb = QApplication.clipboard()
         cb.clear(mode=cb.Clipboard)
-
         cb.setText(win.wallet.selected.address, mode=cb.Clipboard)
 
     def str_addr(self, address: str):
         return address[:5] + '...' + address[-4:]
+
+    def set_balance(self, win):
+        balance = win.registrar.get_balance(win.wallet.selected.address)
+        self.balanceLabel.setText(f'{balance} ETH')
 
     def retranslateUi(self, MainWindow):
         account = MainWindow.wallet.selected
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Document Registrar", None))
         self.accountNameLabel.setText(QCoreApplication.translate("MainWindow", account.name, None))
         self.addressLabel.setText(QCoreApplication.translate("MainWindow", self.str_addr(account.address), None))
-        self.balanceLabel.setText(QCoreApplication.translate("MainWindow", u"73.0132 ETH", None))
+        self.set_balance(MainWindow)
         self.copyBT.setText(QCoreApplication.translate("MainWindow", u"copy", None))
         for i, acc in enumerate(MainWindow.wallet.accounts):
             self.comboBox.addItem("")
@@ -117,5 +121,5 @@ class UiWalletWindow(object):
         self.importBT.setText(QCoreApplication.translate("MainWindow", u"Import Account", None))
         self.createBT.setText(QCoreApplication.translate("MainWindow", u"Create Account", None))
         self.lockBT.setText(QCoreApplication.translate("MainWindow", u"Lock", None))
-        self.showRegistersBT.setText(QCoreApplication.translate("MainWindow", u"register a file", None))
-        self.pushButton_6.setText(QCoreApplication.translate("MainWindow", u"show registers", None))
+        self.registerBT.setText(QCoreApplication.translate("MainWindow", u"register a file", None))
+        self.showRegistersBT.setText(QCoreApplication.translate("MainWindow", u"show registers", None))

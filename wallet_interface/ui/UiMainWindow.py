@@ -1,5 +1,3 @@
-import sys
-
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -68,8 +66,6 @@ class UiMainWindow(object):
 
         QMetaObject.connectSlotsByName(MainWindow)
 
-    # setupUi
-
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", "Document Registrar", None))
         self.importWalletBT.setText(QCoreApplication.translate("MainWindow", "Import Wallet", None))
@@ -82,4 +78,3 @@ class UiMainWindow(object):
         self.label_4.setText(QCoreApplication.translate("MainWindow", "Yes, I already have a Recovery\n"
                                                                       "Phrase", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", "No, let's get set up!", None))
-    # retranslateUi
