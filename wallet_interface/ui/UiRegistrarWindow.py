@@ -19,6 +19,10 @@ class UiRegistrarWindow(object):
         self.txHashLabel = QLabel(self.centralwidget)
         self.txHashLabel.setObjectName(u"txHashLabel")
         self.txHashLabel.setGeometry(QRect(20, 455, 761, 36))
+        self.openExplorerBT = QPushButton(self.centralwidget)
+        self.openExplorerBT.setObjectName(u"openExplorerBT")
+        self.openExplorerBT.setGeometry(QRect(20, 455, 41, 36))
+        self.openExplorerBT.setText('Open')
         self.fileHashText = QTextBrowser(self.centralwidget)
         self.fileHashText.setObjectName(u"fileHashText")
         self.fileHashText.setGeometry(QRect(200, 161, 591, 36))
@@ -109,6 +113,12 @@ class UiRegistrarWindow(object):
         self.registerWsBT.clicked.connect(lambda: self.register_file(RegistrarWindow))
         self.copyBT.clicked.connect(lambda: self._copy(RegistrarWindow))
         self.submitBT.clicked.connect(lambda: self.submit(RegistrarWindow))
+        self.openExplorerBT.clicked.connect(self.open_url)
+        self.openExplorerBT.hide()
+
+    def open_url(self):
+        tx_hash = self.txHashLabel.text().split()[-1]
+        QDesktopServices().openUrl(f'https://rinkeby.etherscan.io/tx/{tx_hash}')
 
     def _copy(self, win):
         cb = QApplication.clipboard()
@@ -121,7 +131,8 @@ class UiRegistrarWindow(object):
         title = self.titleEdit.text().strip() or 'Document'
         private_key = win.wallet.selected.private_key
         tx_hash = win.registrar.register_without_sign(file_hash, title, private_key)
-        self.txHashLabel.setText(f'Txn Hash: {tx_hash}')
+        self.txHashLabel.setText(f'            Txn Hash: {tx_hash}')
+        self.openExplorerBT.show()
 
     def submit(self, win):
         self.titleMayEdit.setEnabled(False)
@@ -134,7 +145,8 @@ class UiRegistrarWindow(object):
             return
         private_key = win.wallet.selected.private_key
         tx_hash = win.registrar.update_title(file_hash, title, private_key)
-        self.txHashLabel.setText(f'Txn Hash: {tx_hash}')
+        self.txHashLabel.setText(f'            Txn Hash: {tx_hash}')
+        self.openExplorerBT.show()
 
     def browse_file(self, win):
         file_path = QFileDialog.getOpenFileName(win, 'Open file')[0]
