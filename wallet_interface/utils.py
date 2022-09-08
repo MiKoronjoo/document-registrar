@@ -17,6 +17,24 @@ class Registrar:
         self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
         self.contract = self.w3.eth.contract(Web3.toChecksumAddress(address), abi=REGISTRAR_ABI)
 
+    def send_ether(self, to: str, value: int, private_key: str) -> str:
+        sender_address = self.w3.eth.account.privateKeyToAccount(private_key).address
+        signed_tx = self.w3.eth.account.signTransaction({
+            'from': sender_address,
+            'nonce': self.w3.eth.get_transaction_count(sender_address),
+            'to': to,
+            'value': value,
+            'data': b'',
+            'gas': 100000,
+            'gasPrice': self.w3.eth.gasPrice,
+            'chainId': 4
+        },
+            private_key
+        )
+        self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        # self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
+        return self.w3.toHex(signed_tx.hash)
+
     def get_balance(self, address: str) -> float:
         return round(self.w3.eth.get_balance(address) / 1e18, 8)
 
@@ -44,14 +62,16 @@ class Registrar:
         self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
         return self.w3.toHex(signed_tx.hash)
 
-    def register_without_sign(self, file_hash: str, title: str, private_key: str) -> str:
+    def register_without_sign(self, file_hash: str, title: str, private_key: str, gas_price: str = None) -> str:
         sender_address = self.w3.eth.account.privateKeyToAccount(private_key).address
         raw_tx = self.contract.functions.registerWithoutSign(file_hash, title)
-        built_tx = raw_tx.buildTransaction({
+        data = {
             'from': sender_address,
             'nonce': self.w3.eth.get_transaction_count(sender_address)
-        })
-
+        }
+        if gas_price is not None:
+            data['gasPrice'] = self.w3.toWei(gas_price, 'gwei')
+        built_tx = raw_tx.buildTransaction(data)
         signed_tx = self.w3.eth.account.sign_transaction(built_tx, private_key)
         self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
         # self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)

@@ -96,6 +96,37 @@ class UiRegistrarWindow(object):
         font1.setStrikeOut(False)
         font1.setKerning(True)
         self.label_4.setFont(font1)
+        self.donateBT = QPushButton(self.centralwidget)
+        self.donateBT.setObjectName(u"donateBT")
+        self.donateBT.setGeometry(QRect(532, 330, 61, 36))
+        self.donateEdit = QLineEdit(self.centralwidget)
+        self.donateEdit.setObjectName(u"donateEdit")
+        self.donateEdit.setValidator(QDoubleValidator(0, 1000000, 12))
+        self.donateEdit.setGeometry(QRect(596, 330, 71, 36))
+        self.donateEdit.setInputMethodHints(Qt.ImhNone)
+        self.donateEdit.setDragEnabled(False)
+        self.donateEdit.setReadOnly(False)
+        self.ethLabel = QLabel(self.centralwidget)
+        self.ethLabel.setObjectName(u"ethLabel")
+        self.ethLabel.setGeometry(QRect(670, 335, 66, 31))
+        font = QFont()
+        font.setPointSize(15)
+        font.setBold(False)
+        font.setWeight(50)
+        self.ethLabel.setFont(font)
+        self.gasCheckBox = QCheckBox(self.centralwidget)
+        self.gasCheckBox.setObjectName(u"gasCheckBox")
+        self.gasCheckBox.setGeometry(QRect(190, 410, 171, 25))
+        self.gasCheckBox.setChecked(False)
+        self.gasCheckBox.setTristate(False)
+        self.gweiEdit = QLineEdit(self.centralwidget)
+        self.gweiEdit.setObjectName(u"gweiEdit")
+        self.gweiEdit.setValidator(QDoubleValidator(0, 1000000, 8))
+        self.gweiEdit.setGeometry(QRect(340, 408, 81, 30))
+        self.gweiLabel = QLabel(self.centralwidget)
+        self.gweiLabel.setObjectName(u"gweiLabel")
+        self.gweiLabel.setGeometry(QRect(426, 410, 70, 31))
+        self.gweiLabel.setFont(font)
         RegistrarWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(RegistrarWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -113,7 +144,10 @@ class UiRegistrarWindow(object):
         self.registerWsBT.clicked.connect(lambda: self.register_file(RegistrarWindow))
         self.copyBT.clicked.connect(lambda: self._copy(RegistrarWindow))
         self.submitBT.clicked.connect(lambda: self.submit(RegistrarWindow))
+        self.donateBT.clicked.connect(lambda: self.donate(RegistrarWindow))
         self.openExplorerBT.clicked.connect(self.open_url)
+        self.gasCheckBox.toggled.connect(self.custom_gas_toggled)
+        self.donateEdit.textEdited.connect(lambda: self.donateBT.setEnabled(True))
         self.openExplorerBT.hide()
 
     def open_url(self):
@@ -125,12 +159,21 @@ class UiRegistrarWindow(object):
         cb.clear(mode=cb.Clipboard)
         cb.setText(self.fileHashText.toPlainText(), mode=cb.Clipboard)
 
+    def donate(self, win):
+        self.donateBT.setEnabled(False)
+        to = self.temp_author
+        value = round(float(self.donateEdit.text()) * 10 ** 18)
+        tx_hash = win.registrar.send_ether(to, value, win.wallet.selected.private_key)
+        self.txHashLabel.setText(f'            Txn Hash: {tx_hash}')
+        self.openExplorerBT.show()
+
     def register_file(self, win):
         self.registerWsBT.setEnabled(False)
         file_hash = self.fileHashText.toPlainText()
         title = self.titleEdit.text().strip() or 'Document'
         private_key = win.wallet.selected.private_key
-        tx_hash = win.registrar.register_without_sign(file_hash, title, private_key)
+        gas_price = self.gweiEdit.text() if self.gasCheckBox.isChecked() else None
+        tx_hash = win.registrar.register_without_sign(file_hash, title, private_key, gas_price)
         self.txHashLabel.setText(f'            Txn Hash: {tx_hash}')
         self.openExplorerBT.show()
 
@@ -161,36 +204,52 @@ class UiRegistrarWindow(object):
                 self.show_register_elements()
             else:
                 title, author, timestamp = win.registrar.get_info(file_hash)
+                self.temp_author = author
                 self.infoLabel.setText(
                     f"<html><head/><body><p><span style=\" font-size:14pt;\">Title:</span></p><p><span style=\" font-size:14pt;\">Author: {author}</span></p><p><span style=\" font-size:14pt;\">Time: {timestamp}</span></p></body></html>")
                 self.titleMayEdit.setText(title)
                 self.titleMayEdit.setEnabled(False)
                 self.show_info_elements()
-                print('S:', win.wallet.selected.address)
-                print('A:', author)
                 if win.wallet.selected.address != author:
                     self.editCancelBT.hide()
+                else:
+                    self.donateBT.hide()
+                    self.donateEdit.hide()
+                    self.ethLabel.hide()
+
+    def custom_gas_toggled(self):
+        is_checked = self.gasCheckBox.isChecked()
+        self.gweiEdit.setEnabled(is_checked)
+        self.gweiLabel.setEnabled(is_checked)
 
     def hide_register_elements(self):
-        elements = [self.r1RM, self.r2RM, self.titleEdit, self.registerBT, self.registerWsBT, self.serverDownLabel]
+        elements = [self.r1RM, self.r2RM, self.titleEdit, self.registerBT, self.registerWsBT, self.serverDownLabel,
+                    self.gasCheckBox, self.gweiEdit, self.gweiLabel]
         for elm in elements:
             elm.hide()
 
     def show_register_elements(self):
         self.hide_info_elements()
         self.registerWsBT.setEnabled(True)
-        elements = [self.r1RM, self.r2RM, self.titleEdit, self.registerBT, self.registerWsBT, self.serverDownLabel]
+        self.gasCheckBox.setChecked(False)
+        self.gweiEdit.setEnabled(False)
+        self.gweiLabel.setEnabled(False)
+        elements = [self.r1RM, self.r2RM, self.titleEdit, self.registerBT, self.registerWsBT, self.serverDownLabel,
+                    self.gasCheckBox, self.gweiEdit, self.gweiLabel]
         for elm in elements:
             elm.show()
 
     def hide_info_elements(self):
-        elements = [self.I1RM, self.titleMayEdit, self.infoLabel, self.editCancelBT, self.submitBT]
+        elements = [self.I1RM, self.titleMayEdit, self.infoLabel, self.editCancelBT, self.submitBT,
+                    self.donateBT, self.donateEdit, self.ethLabel]
         for elm in elements:
             elm.hide()
 
     def show_info_elements(self):
         self.hide_register_elements()
-        elements = [self.I1RM, self.titleMayEdit, self.infoLabel, self.editCancelBT]
+        self.donateBT.setEnabled(True)
+        elements = [self.I1RM, self.titleMayEdit, self.infoLabel, self.editCancelBT,
+                    self.donateBT, self.donateEdit, self.ethLabel]
         for elm in elements:
             elm.show()
 
@@ -228,3 +287,9 @@ class UiRegistrarWindow(object):
         self.editCancelBT.setText(QCoreApplication.translate("RegistrarWindow", u"edit", None))
         self.submitBT.setText(QCoreApplication.translate("RegistrarWindow", u"submit", None))
         self.label_4.setText(QCoreApplication.translate("RegistrarWindow", u"Register File", None))
+        self.donateBT.setText(QCoreApplication.translate("RegistrarWindow", u"Donate", None))
+        self.donateEdit.setText(QCoreApplication.translate("RegistrarWindow", u"0.001", None))
+        self.ethLabel.setText(QCoreApplication.translate("RegistrarWindow", u"ETH", None))
+        self.gasCheckBox.setText(QCoreApplication.translate("RegistrarWindow", u"custom gas price", None))
+        self.gweiEdit.setText(QCoreApplication.translate("RegistrarWindow", u"1.1", None))
+        self.gweiLabel.setText(QCoreApplication.translate("RegistrarWindow", u"GWei", None))
