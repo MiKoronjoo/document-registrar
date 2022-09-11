@@ -11,6 +11,8 @@ class Registrar:
         self.contract = self.w3.eth.contract(Web3.toChecksumAddress(address), abi=REGISTRAR_ABI)
 
     def register(self, file_hash: str, title: str, author: str, sign: dict, private_key: str) -> str:
+        if not file_hash.startswith('0x'):
+            file_hash = '0x' + file_hash
         sender_address = self.w3.eth.account.privateKeyToAccount(private_key).address
         raw_tx = self.contract.functions.register(file_hash,
                                                   title,
@@ -25,5 +27,5 @@ class Registrar:
 
         signed_tx = self.w3.eth.account.sign_transaction(built_tx, private_key)
         self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
+        # self.w3.eth.wait_for_transaction_receipt(signed_tx.hash)
         return self.w3.toHex(signed_tx.hash)

@@ -1,3 +1,4 @@
+import requests
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -142,6 +143,7 @@ class UiRegistrarWindow(object):
         self.editCancelBT.clicked.connect(self.edit_cancel)
         self.browseBT.clicked.connect(lambda: self.browse_file(RegistrarWindow))
         self.registerWsBT.clicked.connect(lambda: self.register_file(RegistrarWindow))
+        self.registerBT.clicked.connect(lambda: self.register_with_server(RegistrarWindow))
         self.copyBT.clicked.connect(lambda: self._copy(RegistrarWindow))
         self.submitBT.clicked.connect(lambda: self.submit(RegistrarWindow))
         self.donateBT.clicked.connect(lambda: self.donate(RegistrarWindow))
@@ -149,6 +151,19 @@ class UiRegistrarWindow(object):
         self.gasCheckBox.toggled.connect(self.custom_gas_toggled)
         self.donateEdit.textEdited.connect(lambda: self.donateBT.setEnabled(True))
         self.openExplorerBT.hide()
+
+    def server_status(self):
+        from config import SERVER_URL
+        try:
+            response = requests.get(f'{SERVER_URL}/getOK', timeout=2)
+        except requests.exceptions.ConnectionError:
+            response = None
+        if not response:
+            self.serverDownLabel.show()
+            self.registerBT.setDisabled(True)
+        else:
+            self.serverDownLabel.hide()
+            self.registerBT.setDisabled(False)
 
     def open_url(self):
         tx_hash = self.txHashLabel.text().split()[-1]
@@ -167,8 +182,32 @@ class UiRegistrarWindow(object):
         self.txHashLabel.setText(f'            Txn Hash: {tx_hash}')
         self.openExplorerBT.show()
 
+    def register_with_server(self, win):
+        from config import SERVER_URL
+        from utils import sign_with_private_key
+        self.registerBT.setDisabled(True)
+        self.registerWsBT.setDisabled(True)
+        file_hash = self.fileHashText.toPlainText()
+        title = self.titleEdit.text()
+        private_key = win.wallet.selected.private_key
+        sign = sign_with_private_key(file_hash, title, private_key)
+        data = dict(hash=file_hash, title=title, author=win.wallet.selected.address,
+                    v=sign['v'], r=sign['r'], s=sign['s'])
+        response = requests.post(f'{SERVER_URL}/registerHash', json=data)
+        if response:
+            tx_hash = response.json()['tx_hash']
+            self.txHashLabel.setText(f'            Txn Hash: {tx_hash}')
+            self.openExplorerBT.show()
+        else:
+            self.txHashLabel.setText(QCoreApplication.translate("RegistrarWindow",
+                                                                u"<html><head/><body><p><span style=\" color:#ff0000;\">Failed</span></p></body></html>",
+                                                                None))
+            self.openExplorerBT.hide()
+            print(response.json())
+
     def register_file(self, win):
-        self.registerWsBT.setEnabled(False)
+        self.registerBT.setDisabled(True)
+        self.registerWsBT.setDisabled(True)
         file_hash = self.fileHashText.toPlainText()
         title = self.titleEdit.text().strip() or 'Document'
         private_key = win.wallet.selected.private_key
@@ -231,6 +270,7 @@ class UiRegistrarWindow(object):
     def show_register_elements(self):
         self.hide_info_elements()
         self.registerWsBT.setEnabled(True)
+        self.registerBT.setEnabled(True)
         self.gasCheckBox.setChecked(False)
         self.gweiEdit.setEnabled(False)
         self.gweiLabel.setEnabled(False)
@@ -238,6 +278,7 @@ class UiRegistrarWindow(object):
                     self.gasCheckBox, self.gweiEdit, self.gweiLabel]
         for elm in elements:
             elm.show()
+        self.server_status()
 
     def hide_info_elements(self):
         elements = [self.I1RM, self.titleMayEdit, self.infoLabel, self.editCancelBT, self.submitBT,

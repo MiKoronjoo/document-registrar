@@ -1,3 +1,6 @@
+import sys
+import traceback
+
 from flask import Flask, jsonify, request
 
 from config import PRIVATE_KEY, CONTRACT_ADDRESS, RPC_URL
@@ -16,8 +19,9 @@ def error_handler(func):
     def wrapped_func(*args, **kwargs):
         try:
             result = func(*args, **kwargs)
-        except Exception as ex:  # TODO: organize exceptions
-            print(ex)  # TODO: use traceback instead
+        except Exception as ex:
+            traceback.print_exc(file=sys.stdout)
+            print('ERROR:', ex)
             return jsonify(status='Error', message=str(ex)), 400
         else:
             return result
@@ -27,6 +31,7 @@ def error_handler(func):
 
 
 @app.route('/registerHash', methods=['POST'])
+@error_handler
 def register_hash():
     params = request.get_json()
     for param in ('hash', 'title', 'author', 'v', 'r', 's'):
@@ -39,7 +44,7 @@ def register_hash():
         params['author'],
         dict(v=params['v'], r=params['r'], s=params['s']),
         PRIVATE_KEY
-    )  # TODO: check the transaction status
+    )
     return jsonify(status='success', tx_hash=tx_hash), 200
 
 
@@ -48,4 +53,5 @@ def get_ok():
     return 'ok'
 
 
-app.run()
+if __name__ == '__main__':
+    app.run(port=9222)

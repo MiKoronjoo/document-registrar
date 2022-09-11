@@ -108,10 +108,12 @@ def sign_message(types: list, params: list, private_key: str) -> dict:
     signature = Web3.toHex(Web3.soliditySha3(types, params))
     message = encode_defunct(hexstr=signature)
     res = eth_account.account.Account.signHash(message.body, private_key)
+    r = '0x' + Web3.toHex(res.r)[2:].rjust(64, '0')
+    s = '0x' + Web3.toHex(res.s)[2:].rjust(64, '0')
     return dict(
         v=res.v,
-        r=Web3.toHex(res.r),
-        s=Web3.toHex(res.s),
+        r=r,
+        s=s,
     )
 
 
