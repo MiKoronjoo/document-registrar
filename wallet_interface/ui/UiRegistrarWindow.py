@@ -1,4 +1,6 @@
 import requests
+from datetime import datetime
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -243,9 +245,10 @@ class UiRegistrarWindow(object):
                 self.show_register_elements()
             else:
                 title, author, timestamp = win.registrar.get_info(file_hash)
+                date = datetime.fromtimestamp(timestamp).strftime('%b %d, %Y %H:%M:%S')
                 self.temp_author = author
                 self.infoLabel.setText(
-                    f"<html><head/><body><p><span style=\" font-size:14pt;\">Title:</span></p><p><span style=\" font-size:14pt;\">Author: {author}</span></p><p><span style=\" font-size:14pt;\">Time: {timestamp}</span></p></body></html>")
+                    f"<html><head/><body><p><span style=\" font-size:14pt;\">Title:</span></p><p><span style=\" font-size:14pt;\">Author: {author}</span></p><p><span style=\" font-size:14pt;\">Time: {date}</span></p></body></html>")
                 self.titleMayEdit.setText(title)
                 self.titleMayEdit.setEnabled(False)
                 self.show_info_elements()
